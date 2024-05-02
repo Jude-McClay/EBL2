@@ -42,54 +42,67 @@ def alt_haldane_pythtb(delta, t, t2, phi, L1,L2,L3,L4):
     sc_model = model.make_supercell([[L1,L2],[L3,L4]])
     return sc_model
 
-# Create Haldane models through PythTB and TBmodels packages
-#hmodel_pbc_pythtb = alt_haldane_pythtb(delta = 0.2, t = -1, t2 = -5, phi = np.pi / 2, L1=1,L2=0,L3=0,L4=1)
-hmodel_pbc_pythtb = haldane_pythtb(delta = 2, t = -1, t2 = -1/3, phi = np.pi / 2, L=1)
-
-# Cut the model to make a sample of size 10 x 10
+# model masses for which we want to compute lcm
+masses = np.array([0.2, 2])
+# predefine lcm array 
+chern_matrx_array = [None] * len(masses)
+# define size of the system
 Nx = 50
 Ny = 50
-hmodel_obc_pythtb = make_finite(model=hmodel_pbc_pythtb, nx_sites=Nx, ny_sites=Ny)
-
 # List of w values
 #w_values = [0, 0.2, 0.4, 0.6, 0.8]  # Add more values as needed
-w_values = [0,2,4,6,8,10]
+#w_values = [0,2,4,6,8,10]
 #w_values = [4]
+w_values = [2,6,10]
 
-# Initiallise chern marker matrix dictionary
-chern_matrices = {}
+i = 0
+for mass in masses:
+    print(f'calculations for mass: {mass}')
+    # Create Haldane models through PythTB and TBmodels packages
+    #hmodel_pbc_pythtb = alt_haldane_pythtb(delta = 0.2, t = -1, t2 = -5, phi = np.pi / 2, L1=1,L2=0,L3=0,L4=1)
+    hmodel_pbc_pythtb = haldane_pythtb(delta = mass, t = -1, t2 = -1/3, phi = np.pi / 2, L=1)
 
-for w in w_values:
-    print(f"computing w = {w/2}")
-    # Add Anderson disorder within [-w/2, w/2]. The argument spinstates specifies the spin of the model
-    hmodel_pythtb_disorder = onsite_disorder(model=hmodel_obc_pythtb, w=w, spinstates=1, seed=181)
-    print("disorder added")
+    # Cut the model to make a sample of finite size (defines))
+    hmodel_obc_pythtb = make_finite(model=hmodel_pbc_pythtb, nx_sites=Nx, ny_sites=Ny)
 
-    # Compute the local Chern markers for TBmodels and PythTB
-    chern_matrices[w] = local_chern_marker(model=hmodel_pythtb_disorder, nx_sites=Nx, ny_sites=Ny)
-    print("chern marker computed")
+    # Initiallise chern marker matrix dictionary
+    chern_matrices = {}
+
+    for w in w_values:
+        print(f"computing w = {w/2}")
+        # Add Anderson disorder within [-w/2, w/2]. The argument spinstates specifies the spin of the model
+        hmodel_pythtb_disorder = onsite_disorder(model=hmodel_obc_pythtb, w=w, spinstates=1, seed=181)
+        print("disorder added")
+
+        # Compute the local Chern markers for TBmodels and PythTB
+        chern_matrices[w] = local_chern_marker(model=hmodel_pythtb_disorder, nx_sites=Nx, ny_sites=Ny)
+        print("chern marker computed")
+    
+    chern_matrx_array[i] = chern_matrices
+    i = i + 1 
 
 #classification array
-topology_class = np.empty(len(w_values))
+topology_class = np.zeros((len(masses), len(w_values)))
 # Loop through the chern_matrices dictionary and plot each matrix
-# init counter
-i = 0
 # define widith of the frame 
 l = 3
 
-for w, matrix in chern_matrices.items():
-    plt.figure()
-    plt.title(f"w = {w/2}")
-    #plt.imshow(matrix, cmap='seismic', origin='lower', extent=(0, matrix.shape[1], 0, matrix.shape[0]), vmin=-np.max(np.abs(matrix)), vmax=np.max(np.abs(matrix)))
-    plt.imshow(matrix, cmap=custom_cmap, origin='lower', extent=(0, matrix.shape[1], 0, matrix.shape[0]), vmin=-2, vmax=2)
-    plt.xlabel('X')
-    plt.ylabel('Y')
-    cbar = plt.colorbar(label='Chern Marker')
-    numticks = 4
-    cbar.locator = plt.MaxNLocator(numticks)
-    cbar.update_ticks()
-    m = len(matrix[0])
-    topology_class[i] = sum(sum(matrix[0:l])) + sum(sum(matrix[m-l:m])) + sum(sum(matrix[l:m-l, 0:l])) + sum(sum(matrix[l:m-l, m-l:m]))
-    print(topology_class[i])
-    i = i + 1
-plt.show()
+for j, chern_matrix in enumerate(chern_matrx_array):
+    # init counter
+    i = 0
+    for w, matrix in chern_matrix.items():
+        plt.figure()
+        plt.title(f"w = {w/2}")
+        #plt.imshow(matrix, cmap='seismic', origin='lower', extent=(0, matrix.shape[1], 0, matrix.shape[0]), vmin=-np.max(np.abs(matrix)), vmax=np.max(np.abs(matrix)))
+        plt.imshow(matrix, cmap=custom_cmap, origin='lower', extent=(0, matrix.shape[1], 0, matrix.shape[0]), vmin=-2, vmax=2)
+        plt.xlabel('X')
+        plt.ylabel('Y')
+        cbar = plt.colorbar(label='Chern Marker')
+        numticks = 4
+        cbar.locator = plt.MaxNLocator(numticks)
+        cbar.update_ticks()
+        m = len(matrix[0])
+        topology_class[j, i] = sum(sum(matrix[0:l])) + sum(sum(matrix[m-l:m])) + sum(sum(matrix[l:m-l, 0:l])) + sum(sum(matrix[l:m-l, m-l:m]))
+        print(topology_class[j, i])
+        i = i + 1
+    plt.show()
