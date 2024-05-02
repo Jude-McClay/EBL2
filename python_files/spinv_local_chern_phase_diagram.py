@@ -53,8 +53,8 @@ hmodel_obc_pythtb = make_finite(model=hmodel_pbc_pythtb, nx_sites=Nx, ny_sites=N
 
 # List of w values
 #w_values = [0, 0.2, 0.4, 0.6, 0.8]  # Add more values as needed
-#w_values = [0,2,4,6,8,10]
-w_values = [0,2,3,4,6,8,10]
+w_values = [0,2,4,6,8,10]
+#w_values = [4]
 
 # Initiallise chern marker matrix dictionary
 chern_matrices = {}
@@ -62,7 +62,7 @@ chern_matrices = {}
 for w in w_values:
     print(f"computing w = {w/2}")
     # Add Anderson disorder within [-w/2, w/2]. The argument spinstates specifies the spin of the model
-    hmodel_pythtb_disorder = onsite_disorder(model=hmodel_obc_pythtb, w=w, spinstates=1, seed=185)
+    hmodel_pythtb_disorder = onsite_disorder(model=hmodel_obc_pythtb, w=w, spinstates=1, seed=181)
     print("disorder added")
 
     # Compute the local Chern markers for TBmodels and PythTB
@@ -91,5 +91,5 @@ for w, matrix in chern_matrices.items():
     m = len(matrix[0])
     topology_class[i] = sum(sum(matrix[0:l])) + sum(sum(matrix[m-l:m])) + sum(sum(matrix[l:m-l, 0:l])) + sum(sum(matrix[l:m-l, m-l:m]))
     print(topology_class[i])
-    i = i +1
+    i = i + 1
 plt.show()
