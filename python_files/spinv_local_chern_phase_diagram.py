@@ -6,6 +6,7 @@ from pythtb import tb_model
 from tbmodels import Model
 
 from matplotlib.colors import LinearSegmentedColormap
+import time
 
 
 SMALL_SIZE = 16
@@ -43,7 +44,8 @@ def alt_haldane_pythtb(delta, t, t2, phi, L1,L2,L3,L4):
     return sc_model
 
 # model masses for which we want to compute lcm
-masses = np.array([0.2, 2])
+# masses = np.array([0.2, 2])
+masses = np.array([2])
 # predefine lcm array 
 chern_matrx_array = [None] * len(masses)
 # define size of the system
@@ -52,8 +54,9 @@ Ny = 50
 # List of w values
 #w_values = [0, 0.2, 0.4, 0.6, 0.8]  # Add more values as needed
 #w_values = [0,2,4,6,8,10]
-#w_values = [4]
-w_values = [2,6,10]
+w_values = [4]
+#w_values = [2,6,10]
+
 
 i = 0
 for mass in masses:
@@ -69,6 +72,7 @@ for mass in masses:
     chern_matrices = {}
 
     for w in w_values:
+        start_time = time.time()
         print(f"computing w = {w/2}")
         # Add Anderson disorder within [-w/2, w/2]. The argument spinstates specifies the spin of the model
         hmodel_pythtb_disorder = onsite_disorder(model=hmodel_obc_pythtb, w=w, spinstates=1, seed=181)
@@ -77,6 +81,8 @@ for mass in masses:
         # Compute the local Chern markers for TBmodels and PythTB
         chern_matrices[w] = local_chern_marker(model=hmodel_pythtb_disorder, nx_sites=Nx, ny_sites=Ny)
         print("chern marker computed")
+        end_time = time.time()
+        print("this took", end_time - start_time, "seconds")
     
     chern_matrx_array[i] = chern_matrices
     i = i + 1 
