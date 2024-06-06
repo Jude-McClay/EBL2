@@ -14,11 +14,12 @@ import os
 NX = 50
 NY = 50
 # disorder strength list (bethween 0 and 10)
-W_LIST = [4]
+W_LIST = [6.0]
 # model masses (use linspace bethween 0 and 3 later)
-MASS_LIST = np.array([2])
+MASS_LIST = np.array([2.0])
 # path for saving figures
 PATH = "./figures/"
+OUTPUT_PATH = "./outputs/"
 
 INTEGRATION_WIDTH = 3
 
@@ -52,6 +53,7 @@ def lcm_calc(mass, w_list, Nx, Ny):
         # Compute the local Chern markers for TBmodels and PythTB
         chern_matrices[w] = local_chern_marker(model=hmodel_pythtb_disorder, nx_sites=Nx, ny_sites=Ny)
         print("chern marker computed")
+        #np.save(OUTPUT_PATH + f'w{w}' + f'M{mass}' + '.npy', chern_matrices[w])
     
     # Timing of the task
     end_time = time.time()
